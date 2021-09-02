@@ -1,0 +1,213 @@
+\documentclass{article}
+\RequirePackage{assert}
+\ExplSyntaxOn
+\int_new:N \myTestCount
+\AddToHook {cmd/Assert/before} {
+  \int_gincr:N \myTestCount
+}
+\newcommand\myOneMoreTest {
+  \int_gincr:N \myTestCount
+}
+\int_new:N \myInt
+\int_new:N \myFailed
+\seq_new:N \myFailures
+\newcommand\myAssertCore[7] {
+  \int_gzero:N \myInt
+  \int_gzero:N \myFailed
+  \int_gincr:N \myTestCount 
+  \AssertCore
+    { #1 }
+    { #2 }
+    { #3 }
+    { #4 }
+    { #5 }
+    { #6 }
+    { \int_gset:Nn \myInt { \myTestCount + \myFailed } }
+    { #7 \int_gset:Nn \myInt { \myTestCount + \myFailed} \use_none:n }
+    \int_compare:nNnF \myInt = \myTestCount {
+      \int_use:N \inputlineno/\int_use:N \myTestCount/\int_use:N \myInt//
+      \seq_gput_right:Nx \myFailures { \int_use:N \inputlineno }
+      \seq_gput_right:Nx \myFailures { \int_use:N \myTestCount }
+    }
+}
+\newcommand\YES { }
+\newcommand\NO {
+  \int_gset:Nn \myFailed { \myTestCount }
+}
+\AtEndDocument{
+  \int_compare:nNnTF { \seq_count:N  \myFailures } > 0 {
+    \msg_note:nnx{Assert} {:n} {
+      \int_eval:n { \myTestCount - \seq_count:N \myFailures / 2 }~
+      tests~passed~out~of~\int_use:N \myTestCount
+    }
+    \int_step_inline:nnnn 1 2 { \seq_count:N \myFailures } {
+      \msg_note:nnxx {myAssert} {failure:nn} {
+        \seq_item:Nn \myFailures { #1 }
+      } {
+        \seq_item:Nn \myFailures { \int_eval:n {#1+1} }
+      }
+    }
+    \__assert_raise:n {BAILING OUT}
+  } {
+    \group_begin:
+    \tl_set:Nn \l_tmpa_tl {All~\int_use:N \myTestCount\space~meta~tests~passed}
+    \msg_note:nnx {Assert} {:n} {\l_tmpa_tl}
+    \group_end:
+  }
+}
+\prop_gput:Nnn \g_msg_module_type_prop {myAssert} {Meta~Test}
+\msg_new:nnn{myAssert} {failure:nn} {
+  Failure~at~line~#1~for~test~\##2
+}
+\tl_new:N \myTL
+\ExplSyntaxOff
+\begin{document}
+\section {Unknown type}
+\ExplSyntaxOn
+\myAssertCore { WHATEVER } {} {} {} {} { } { }
+\ExplSyntaxOff
+\newcommand\abco {abc}
+\newcommand\abce {\abco}
+\newcommand\abcx {\abce}
+\newcommand\abcdo {abcd}
+\newcommand\abcde {\abcdo}
+\newcommand\abcdx {\abcde}
+\section {Token lists}
+\subsection {n}
+\myAssertCore {TLEqual} {n} {abc} {n} {abc} {\NO} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {n} {abc} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {n} {abcd} {\YES} {\NO}
+\subsection {o}
+\myAssertCore {TLEqual} {o} {\abco} {n} {abc} {\NO} {\NO}
+\myAssertCore {TLEqual} {o} {\abco} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {o} {\abco} {n} {abc} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {o} {\abco} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {o} {\abco} {\NO} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {o} {\abcdo} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {o} {\abco} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {o} {\abcdo} {\YES} {\NO}
+\subsection {v}
+\myAssertCore {TLEqual} {v} {abco} {n} {abc} {\NO} {\NO}
+\myAssertCore {TLEqual} {v} {abco} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {v} {abco} {n} {abc} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {v} {abco} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {v} {abco} {\NO} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {v} {abcdo} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {v} {abco} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {v} {abcdo} {\YES} {\NO}
+\subsection {e}
+\myAssertCore {TLEqual} {e} {\abce} {n} {abc} {\NO} {\NO}
+\myAssertCore {TLEqual} {e} {\abce} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {e} {\abce} {n} {abc} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {e} {\abce} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {e} {\abce} {\NO} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {e} {\abcde} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {e} {\abce} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {e} {\abcde} {\YES} {\NO}
+\subsection {x}
+\myAssertCore {TLEqual} {x} {\abcx} {n} {abc} {\NO} {\NO}
+\myAssertCore {TLEqual} {x} {\abcx} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {x} {\abcx} {n} {abc} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {x} {\abcx} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {x} {\abcx} {\NO} {\NO}
+\myAssertCore {TLEqual} {n} {abc} {x} {\abcdx} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {x} {\abcx} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {x} {\abcdx} {\YES} {\NO}
+\subsection {tl}
+\myAssertCore {TLEqual} {o} {\abce} {n} {\abco} {\NO} {\NO}
+\myAssertCore {TLEqual} {o} {\abce} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {o} {\abce} {n} {\abco} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {o} {\abce} {n} {abcd} {\YES} {\NO}
+\myAssertCore {TLEqual} {n} {\abco} {o} {\abce} {\NO} {\NO}
+\myAssertCore {TLEqual} {n} {abcd} {o} {\abcde} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {\abco} {o} {\abce} {\YES} {\NO}
+\myAssertCore {TLNotEqual} {n} {abc} {o} {\abce} {\YES} {\NO}
+
+\section {String}
+\myAssertCore {StrEqual} {n} {abc} {n} {abc} {\NO} {\NO}
+\myAssertCore {StrEqual} {n} {abc} {n} {abcd} {\YES} {\NO}
+\myAssertCore {StrNotEqual} {n} {abc} {n} {abc} {\YES} {\NO}
+\myAssertCore {StrNotEqual} {n} {abc} {n} {abcd} {\YES} {\NO}
+\myAssertCore {StrEqual} {n} {\abco} {n} {abc} {\NO} {\NO}
+\myAssertCore {StrEqual} {n} {\abce} {n} {abc} {\NO} {\NO}
+\myAssertCore {StrEqual} {n} {\abcx} {n} {abc} {\NO} {\NO}
+\myAssertCore {StrEqual} {n} {\abco} {n} {abcd} {\YES} {\NO}
+\myAssertCore {StrEqual} {n} {\abce} {n} {abcd} {\YES} {\NO}
+\myAssertCore {StrEqual} {n} {\abcx} {n} {abcd} {\YES} {\NO}
+\myAssertCore {StrNotEqual} {n} {\abco} {n} {abc} {\YES} {\NO}
+\myAssertCore {StrNotEqual} {n} {\abce} {n} {abc} {\YES} {\NO}
+\myAssertCore {StrNotEqual} {n} {\abcx} {n} {abc} {\YES} {\NO}
+
+\section {Match}
+\myAssertCore {TLMatch} {n} {abc} {n} {abc} {\NO} {\NO}
+\myAssertCore {TLNoMatch} {n} {abc} {n} {abc} {\YES} {\NO}
+\myAssertCore {TLMatch} {n} {abc} {o} {\abco} {\NO} {\NO}
+\myAssertCore {TLNoMatch} {n} {abc} {n} {\abco} {\NO} {\NO}
+\myAssertCore {TLNoMatch} {n} {abc} {o} {\abco} {\YES} {\NO}
+\myAssertCore {TLMatch} {n} {\c{abco}} {n} {\abco} {\NO} {\NO}
+\myAssertCore {TLNoMatch} {n} {\c{abco}} {n} {\abco} {\YES} {\NO}
+\myAssertCore {TLMatch} {n} {\c{abco}} {o} {\abce} {\NO} {\NO}
+\myAssertCore {TLNoMatch} {n} {\c{abco}} {o} {\abce} {\YES} {\NO}
+
+\myAssertCore {StrMatch} {n} {abc} {n} {abc} {\NO} {\NO}
+\myAssertCore {StrNoMatch} {n} {abc} {n} {abc} {\YES} {\NO}
+\myAssertCore {StrMatch} {n} {abc} {n} {\abco} {\NO} {\NO}
+\myAssertCore {StrNoMatch} {n} {abc} {n} {\abco} {\YES} {\NO}
+\myAssertCore {StrMatch} {n} {abc} {n} {\abce} {\NO} {\NO}
+\myAssertCore {StrNoMatch} {n} {abc} {n} {\abce} {\YES} {\NO}
+\myAssertCore {StrMatch} {n} {abc} {n} {\abcx} {\NO} {\NO}
+\myAssertCore {StrNoMatch} {n} {abc} {n} {\abcx} {\YES} {\NO}
+\myAssertCore {StrMatch} {n} {^.[abc].$} {n} {\abcx} {\NO} {\NO}
+\myAssertCore {StrNoMatch} {n} {^.[abc].$} {n} {\abcx} {\YES} {\NO}
+\newcommand \ONE {1}
+\myAssertCore {StrMatch} {n} {1.1} {n} {\ONE+1} {\NO} {\NO}
+
+\section{Int}
+\myAssertCore {IntEqual} {n} {1+1} {n} {2} {\NO} {\NO}
+\myAssertCore {IntNotEqual} {n} {1+1} {n} {2} {\YES} {\NO}
+\myAssertCore {IntEqual} {n} {1+1} {n} {2+1} {\YES} {\NO}
+\myAssertCore {IntNotEqual} {n} {1+1} {n} {2+1} {\NO} {\NO}
+\myAssertCore {IntLess} {n} {1} {n} {2} {\NO} {\NO}
+\myAssertCore {IntNotLess} {n} {1} {n} {2} {\YES} {\NO}
+\myAssertCore {IntLess} {n} {1} {n} {1} {\YES} {\NO}
+\myAssertCore {IntNotLess} {n} {1} {n} {1} {\NO} {\NO}
+\myAssertCore {IntGreater} {n} {3} {n} {2} {\NO} {\NO}
+\myAssertCore {IntNotGreater} {n} {3} {n} {2} {\YES} {\NO}
+\myAssertCore {IntGreater} {n} {1} {n} {1} {\YES} {\NO}
+\myAssertCore {IntNotGreater} {n} {1} {n} {1} {\NO} {\NO}
+
+\section{FP}
+\myAssertCore {FPEqual} {n} {1.1+1.1} {n} {2.2} {\NO} {\NO}
+\myAssertCore {FPNotEqual} {n} {1+1} {n} {2} {\YES} {\NO}
+\myAssertCore {FPEqual} {n} {1+1} {n} {2+1} {\YES} {\NO}
+\myAssertCore {FPNotEqual} {n} {1+1} {n} {2+1} {\NO} {\NO}
+\myAssertCore {FPLess} {n} {1} {n} {2} {\NO} {\NO}
+\myAssertCore {FPNotLess} {n} {1} {n} {2} {\YES} {\NO}
+\myAssertCore {FPLess} {n} {1} {n} {1} {\YES} {\NO}
+\myAssertCore {FPNotLess} {n} {1} {n} {1} {\NO} {\NO}
+\myAssertCore {FPGreater} {n} {3} {n} {2} {\NO} {\NO}
+\myAssertCore {FPNotGreater} {n} {3} {n} {2} {\YES} {\NO}
+\myAssertCore {FPGreater} {n} {1} {n} {1} {\YES} {\NO}
+\myAssertCore {FPNotGreater} {n} {1} {n} {1} {\NO} {\NO}
+
+\section{Almost}
+\myAssertCore {AlmostEqual} {n} {1} {n} {1.000001} {\NO} {\NO}
+\myAssertCore {AlmostNotEqual} {n} {1} {n} {1.00001} {\NO} {\NO}
+\myAssertCore {AlmostEqual} {n} {1} {n} {1.00001} {\YES} {\NO}
+\myAssertCore {AlmostNotEqual} {n} {1} {n} {1.000001} {\YES} {\NO}
+\myAssertCore {AlmostLess} {n} {1.0000001} {n} {1} {\NO} {\NO}
+\myAssertCore {AlmostNotLess} {n} {1.000001} {n} {1} {\YES} {\NO}
+\myAssertCore {AlmostLess} {n} {1.0000001} {n} {1} {\YES} {\NO}
+\myAssertCore {AlmostNotLess} {n} {1.00001} {n} {1} {\NO} {\NO}
+\myAssertCore {AlmostGreater} {n} {1} {n} {1.000001} {\NO} {\NO}
+\myAssertCore {AlmostNotGreater} {n} {1} {n} {1.000001} {\YES} {\NO}
+\myAssertCore {AlmostGreater} {n} {1} {n} {1.000001} {\YES} {\NO}
+\myAssertCore {AlmostNotGreater} {n} {1} {n} {1.00001} {\NO} {\NO}
+
+\AssertUsePrecision\
+\AssertSetPrecision{0.01}
+\myAssertCore {FPEqual} {n} {0.01} {n} {\AssertPrecision} {\NO} {\NO}
+\myAssertCore {AlmostEqual} {n} {1} {n} {1.01} {\NO} {\NO}
+Done.
+\end{document}

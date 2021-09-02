@@ -1,0 +1,901 @@
+% \iffalse meta-comment
+%
+% Copyright (C) 2021 by Jérôme Laurens
+%
+% This file may be distributed and/or modified under the
+% conditions of the LaTeX Project Public License, either
+% version 1.3c of this license or (at your option) any later
+% version. The latest version of this license is in:
+%
+%     http://www.latex-project.org/lppl.txt
+%
+% and version 1.3c or later is part of all distributions of
+% LaTeX version 2020/01/01 or later.
+%
+% \fi
+% \iffalse
+%
+%<*driver>
+\documentclass{l3doc}
+\usepackage{hyperref}
+\usepackage[final]{listings}
+\usepackage{assert}
+\EnableCrossrefs
+\CodelineIndex
+\RecordChanges
+\begin{document}
+  \DocInput{assert.dtx}
+\end{document}
+%</driver>
+% \fi
+%
+% \makeatletter
+%
+% \lst@RequireAspects{writefile}
+% \newsavebox{\LaTeXdemo@box}
+% \lstnewenvironment{LaTeXdemo}[1][code and example]
+%  {^^A
+%    \global\let\lst@intname\@empty
+%    \expandafter\let\expandafter\LaTeXdemo@end
+%      \csname LaTeXdemo@#1@end\endcsname
+%    \@nameuse{LaTeXdemo@#1}^^A
+%  }
+%  {\LaTeXdemo@end}
+% \newcommand*\LaTeXdemo@new[3]{^^A
+%  \expandafter\newcommand\expandafter*\expandafter
+%    {\csname LaTeXdemo@#1\endcsname}{#2}^^A
+%  \expandafter\newcommand\expandafter*\expandafter
+%    {\csname LaTeXdemo@#1@end\endcsname}{#3}^^A
+% }
+% \lstdefinestyle{myLaTeX}{
+%    basicstyle   = \ttfamily,
+%    basewidth    = 0.51em,
+%    gobble       = 3,
+%    keywordstyle = \color{blue},
+%    language     = [LaTeX]{TeX},
+%    numbers      = left,
+%    numberstyle  = \tiny,
+%    moredelim=[is][\rmfamily\itshape]{$}{$},
+%    moretexcs    = {
+%      Assert,
+%      AssertPrecision,
+%      AssertUsePrecision,
+%      AssertSetPrecision,
+%      part,
+%      chapter,
+%      section,
+%      subsection,
+%      subsubsection,
+%      paragraph,
+%      subparagraph,
+%      RequirePackage,
+%    }
+% }
+% \newcommand\mylstinline{\lstinline[style = myLaTeX]}
+% \newcommand*\LaTeXdemo@common{^^A
+%  \setkeys{lst}
+%    {
+%      basicstyle   = \ttfamily\small,
+%      basewidth    = 0.51em,
+%      gobble       = 3,
+%      keywordstyle = \color{blue},
+%      language     = [LaTeX]{TeX},
+%      numbers      = left,
+%      numberstyle  = \tiny,
+%      moredelim=[is][\rmfamily\itshape]{$}{$},
+%      moretexcs    =
+%        {
+%          Assert,
+%          AssertPrecision,
+%          AssertUsePrecision,
+%          AssertSetPrecision,
+%          part,
+%          chapter,
+%          section,
+%          subsection,
+%          subsubsection,
+%          paragraph,
+%          subparagraph,
+%          RequirePackage,
+%        }
+%    }^^A
+% }
+% \newcommand*\LaTeXdemo@input{^^A
+%   \MakePercentComment
+%   \catcode`\^^M=10\relax
+%   \small
+%   \begingroup
+%     \setkeys{lst}
+%       {
+%         SelectCharTable=\lst@ReplaceInput{\^\^I}{\lst@ProcessTabulator}
+%       }^^A
+%     \leavevmode
+%       \input{\jobname.tmp}^^A
+%   \endgroup
+%   \MakePercentIgnore
+% }
+% \LaTeXdemo@new{code and example}
+%   {^^A
+%     \setbox\LaTeXdemo@box=\hbox\bgroup
+%       \lst@BeginAlsoWriteFile{\jobname.tmp}^^A
+%       \LaTeXdemo@common
+%   }
+%   {^^A
+%       \lst@EndWriteFile
+%     \egroup
+%     \begin{center}
+%       \ifdim\wd\LaTeXdemo@box>0.48\linewidth\relax
+%         \hbox to\linewidth{\box\LaTeXdemo@box\hss}^^A
+%           \begin{minipage}{\linewidth}
+%             \LaTeXdemo@input
+%           \end{minipage}
+%       \else
+%         \begin{minipage}{0.48\linewidth}
+%           \LaTeXdemo@input
+%         \end{minipage}
+%         \hfill
+%         \begin{minipage}{0.48\linewidth}
+%           \hbox to\linewidth{\box\LaTeXdemo@box\hss}^^A
+%         \end{minipage}
+%       \fi
+%     \end{center}
+%   }
+% \LaTeXdemo@new{code and float}{^^A
+%   \lst@BeginAlsoWriteFile{siunitx.tmp}^^A
+%   \LaTeXdemo@common
+% }{^^A
+%   \lst@EndWriteFile
+%   \LaTeXdemo@input
+% }
+% \LaTeXdemo@new{code only}
+%   {\LaTeXdemo@common}{}
+%
+% \makeatother
+%
+% \GetFileInfo{assert.sty}
+% \title{Lightweight assertion library for testing}
+% \author{Jérôme Laurens}
+% \date{\fileversion \qquad \filedate}
+% \maketitle
+%
+% \begin{abstract}
+% Provides a pair of commands to insert assertions in the code.
+% It is mainly intended for package developers but document writer may find this helpful.
+% \end{abstract}
+%
+% \tableofcontents
+%
+% \begin{documentation}
+%
+% \section{Minimal example}
+%
+% The document below compiles without any error
+% \begin{LaTeXdemo}[code only]
+%  \documentclass {article}
+%  \RequirePackage {assert}
+%  \begin {document}
+%  \newcommand \ONE { 1 }
+%  \Assert {IntEqual} {\ONE+1} {2}
+%  \Assert {IntNotEqual} {ONE+1} {3}
+%  \Assert {StrEqual} {\ONE+1} {1+1}
+%  \Assert {StrNotEqual} {\ONE+1} {2}
+%  \Assert {StrMatch} {1.1} {\ONE+1}
+%  \Assert {FPNotEqual} {1} {1.0000001}
+%  \Assert {AlmostEqual} {1} {1.0000001}
+%  \Assert {AlmostNotEqual} {1} {1.01}
+%  \AssertSetPrecision {0.01}
+%  \Assert {AlmostEqual} {1} {1.01}
+%  \end {document}
+% \end{LaTeXdemo}
+% whereas each of the next lines causes a fatal error:
+% \begin{LaTeXdemo}[code only]
+%  \Assert {IntNotEqual} {\ONE+1} {2}
+%  \Assert {IntEqual} {ONE+1} {3}
+%  \Assert {StrEqual} {\ONE+1} {2}
+% \end{LaTeXdemo}
+%
+% \section {Testing}
+%
+%   \subsection {Presentation}
+%   Testing is a major phase in modern software development.
+%   It ensures that the final product fulfills some expectations
+%   for the satisfaction of the customers.
+%   In general, many tools are available to help automating
+%   the testing process depending on the context and
+%   this particular package is a testing tool targeting \LaTeX{} code.
+%
+%   A test basically consists in comparing an \meta{actual} value
+%   to an \meta{expected} one. If they conform to each other,
+%   the test passed, otherwise the test failed. The goal is to
+%   write tests concerning the different features of the code
+%   currently in development. When running the tests, none should fail.
+%
+%   There are different kinds of tests for different purposes.
+%   Actually, the built in command line tool |l3build|
+%   combined with the support of macros in |regression-test.tex|,
+%   allows to run a wide range of regression tests.
+%   A regression test aims at ensuring that a change made
+%   does not break the code. It can be performed only once
+%   some working code is already available. In practice
+%   with |l3build|, regression tests need many steps: 
+%   \begin{itemize}
+%     \item write some \LaTeX\ code,
+%     \item write \meta{test name}|.lvt| files
+%       to test that code,
+%     \item run |l3build save |\meta{test name} to
+%       produce \meta{test name}|.lgt| that contains
+%       what is expected,
+%     \item make any improvements to  the initial \LaTeX\ code,
+%     \item run |l3build check |\meta{test name} to
+%       see if the \meta{test name}|.lgt| produced
+%       conforms to what is expected.
+%   \end{itemize}
+%   
+%   This system is very powerful on some respect but it is
+%   not really suitable for active development of simple
+%   features, which is the starting point for everything. 
+%
+%   Here the unique \cs{Assert} command is a straighformward comparison between what is
+%   expected and what is actually available.
+%   It will raise a fatal error at the end of the document
+%   if they do not conform to each other.
+%   The reason of the failure, if any, is detailed in the log.
+%   With \cs{Assert}, we cannot test for boxes of pdf nodes,
+%   but we can test dynamic expected values.
+%
+%   \pkg{qstest} is another alternative to writing tests.
+%   More complete than \pkg{assert} but far more complex too.
+%
+% \subsection{Testing with assertions}
+%
+% \begin{function}{\Assert}
+%   \begin{syntax}
+%     \cs{Assert} \marg{type}
+%     \ \ \oarg{actual expansion rule} \marg{actual}
+%     \ \ \oarg{expected expansion rule} \marg{expected}
+%   \end{syntax}
+%   \meta{type} must be one of the previously added types
+%   otherwise a fatal error is raised.
+%   See section~\ref{sec:AssertAdd}.
+%   Available hooks are invoked in that order
+%   \begin{description}
+%     \item [--] |cmd/Assert/before|
+%     \item [--] |cmd/Assert/|\meta{type}|/before|
+%     \item only on failure:
+%     \begin{description}
+%       \item [--] |cmd/Assert/before failure|
+%       \item [--] |cmd/Assert/|\meta{type}|/failure|
+%       \item [--] |cmd/Assert/after failure|
+%     \end{description}
+%     \item [--] |cmd/Assert/|\meta{type}|/after|
+%     \item [--] |cmd/Assert/after|
+%   \end{description}
+%   The \meta{actual} and \meta{expected} argument names are formal,
+%   they just refer to common pratice in testing and you can change their order of use. 
+%
+% For token list assertions, the \meta{actual} and \meta{expected} arguments may follow
+% an optional \meta{expansion rule} argument, as detailed in \emph{interface3.pdf}.
+% \begin{description}
+%    \item[x] for \emph{exhaustive expansion}: expand every token of \meta{value} then
+%     every token of the expansion and so on until only unexpandable tokens remain,
+%    \item[e] for an alternate \emph{exhaustive expansion}: that may be expandable,
+%    contrary to the former,
+%    \item[o] for \emph{expansion once},
+%    \item[v] for \emph{value of variable}: a command is constructed first
+%     from the given name, then its value is recovered.
+% \end{description}
+% For assertion data other then token lists,
+% the \meta{actual} and \meta{expected} arguments are exhaustively expanded
+% such that no previous \meta{expansion rule} is needed.
+%
+% \end{function}
+%
+% \subsection {Known assertion types}
+% \subsubsection {Basic types}
+% Names are self explanatory.
+% \begin{description}
+%   \item[TLEqual]      token list equality,
+%   \item[TLNotEqual]   token list inequality,
+%   \item[StrEqual]     string equality,
+%   \item[StrNotEqual]  string inequality,
+%   \item[IntEqual]  integer equality,
+%   \item[IntNotEqual]  integer inequality,
+%   \item[IntLess]  integer ordering,
+%   \item[IntNotLess]  integer ordering,
+%   \item[IntGreater]  integer ordering,
+%   \item[IntNotGreater]  integer ordering,
+%   \item[FPEqual]  float equality,
+%   \item[FPNotEqual]  float inequality,
+%   \item[FPLess]  float ordering,
+%   \item[FPNotLess]  float ordering,
+%   \item[FPGreater]  float ordering,
+%   \item[FPNotGreater]  float ordering,
+% \end{description}
+% \subsubsection{Matching}
+% Matching allows to test only parts of a token list or string.
+% It follows a different rule: \meta{actual} is a regular expression
+%   (as defined by \pkg{l3regex} package in \emph{interface3d.pdf}),
+%   whereas \meta{expected} is either a token list or a string.
+%   The latter is exhaustively expanded.
+% \begin{description}
+%   \item[TLMatch]  token list match,
+%   \item[TLNoMatch]  token list negative match,
+%   \item[StrMatch]  string match,
+%   \item[StrNoMatch]  string negative match.
+% \end{description}
+%
+% \subsubsection {Almost}
+% Computational errors are managed here, for example the equality $a=b$ is replaced by
+% $\def |{\textrm{\textbar}} |b-a|<\varepsilon (1+|a|+|b|)$ where $\varepsilon>0$ is the precision.
+% \begin{description}
+%   \item[AlmostEqual]  float equality,
+%   \item[AlmostNotEqual]  float inequality,
+%   \item[AlmostLess]  float ordering,
+%   \item[AlmostNotLess]  float ordering,
+%   \item[AlmostGreater]  float ordering,
+%   \item[AlmostNotGreater]  float ordering,
+% \end{description}
+% The precision can be managed separately.
+% \begin{variable} {\AssertPrecision}
+% Internal precision holder, can be used in float expressions.
+% \end{variable}
+% \begin{function} [EXP] {\AssertUsePrecision}
+% Precision getter for typesetting.
+% \end{function}
+% \begin{function} {\AssertSetPrecision}
+%   \begin{syntax}
+%   \cs{AssertSetPrecision} \marg{new precision}
+%   \end{syntax}
+% Precision setter.
+% \end{function}
+% \subsection{Sharing information}
+%
+% Sharing information between hook codes is possible with
+% a \meta{key}--\meta{value} property list. We only provide
+% a high level management interface with a getter and a setter.
+% 
+% \subsubsection{Property \meta{keys}}
+%
+%   \meta{key} can be one of the reserved strings
+%   \begin{description}
+%   \item |/type|
+%   \item |/actual|
+%   \item |/expected|
+%   \item |/operator|
+%   \end{description}
+%   For each key but the last, the corresponding \meta{value}
+%   is the eponym argument of the \cs{Assert} command. The operator is the
+%   eponym argument used when adding the type with \cs{AssertAdd}.
+%   Changing these values while tpesetting is not supported.
+%
+%   For any other key, the result is what was added to the
+%   property list by the client.
+%
+% \subsubsection{Management}
+%
+% \begin{function}[EXP] {\AssertIn}
+%   \begin{syntax}
+%     \cs{AssertIn} \marg{key} \marg{in code} \oarg{out code}
+%   \end{syntax}
+%   Query for properties by \meta{key}. If the \meta{key} is in
+%   the property list shared by hooks, then \meta{in code}
+%   is executed, otherwise the optional \meta{out code} is executed.
+% \end{function}
+%
+% \begin{function} [EXP] {\AssertGet}
+%   \begin{syntax}
+%     \cs{AssertGet} \marg{key}
+%   \end{syntax}
+%   Return the \meta{value} corresponding to the given \meta{key}.
+%   It can be nothing such that \cs{AssertIn} must be used sometimes.
+% \end{function}
+%
+% \begin{function}{\AssertSet}
+%   \begin{syntax}
+%     \cs{AssertSet} \marg{key} \marg{value}
+%   \end{syntax}
+%   Set a new value for the given key.
+%   Overriding the \meta{value} for a reserved \meta{key}
+%   is unsupported despite it may kind of work.
+% \end{function}
+%
+% \subsection{Shared arguments}
+% \label{sec:imp/shared argument}
+% 
+%   Some arguments are shared by different functions.
+%   \begin{description}
+%     \item[\meta{type}] unique identifier of an assertion.
+%         Chosen after the test performed: |StrEqual|, |StrNotEqual|...
+%   \end{description}
+%
+% \subsection{Defining assertions}
+% \label{sec:AssertAdd}
+%
+%   \begin{function}{\AssertAdd}
+%     \begin{syntax}
+%       \cs{AssertAdd} \marg{type} \marg{comparator} \marg{operator}
+%     \end{syntax}
+%     \begin{description}
+%       \item[\meta{type}] see~\ref{sec:imp/shared argument},
+%       \item[\meta{comparator}] is the name of an |..._if_eq:...| like conditional function
+%         with signature |nnT| or |nnF| and no return value,
+%         the code should be executed on failure,
+%       \item[\meta{operator}] is one of |==|, |!=|...
+%         It is the relation expected by the test between its two first arguments.
+%         Used to display information.
+%     \end{description}
+%     If the \meta{type} was already added, then an error is raised.
+%     The function registers the new key and declares associated hooks
+%     \begin{description}
+%       \item [--] |cmd/Assert/|\meta{type}|/before|,
+%       \item [--] |cmd/Assert/|\meta{type}|/failure|,
+%       \item [--] |cmd/Assert/|\meta{type}|/after|.
+%     \end{description}
+%   \end{function}
+%
+% \end{documentation}
+%
+% \begin{implementation}
+%
+% \section{Implementation}
+%
+% The implementation is private and should not be relied on.
+% Only the public interface documented above is supported.
+%
+% \subsection{\pkg{DocStrip} guards}
+%
+%    \begin{macrocode}
+%<*pkg>
+%    \end{macrocode}
+%
+% Identify the internal prefix (\LaTeX3 \pkg{DocStrip} convention).
+%    \begin{macrocode}
+%<@@=assert>
+%    \end{macrocode}
+%
+% \subsection{Package declarations}
+%
+%    \begin{macrocode}
+\NeedsTeXFormat{LaTeX2e}[2020/01/01]
+\ProvidesExplPackage
+  {assert}
+  {2021/08/26}
+  {0.1}
+  {Lightweight assertion library for testing}
+%    \end{macrocode}
+%
+% \subsection{Variables}
+% \label{sec:imp/variables}
+%
+%   To count the number of tests performed:
+%
+%    \begin{macrocode}
+\int_zero_new:N \g@@_int
+%    \end{macrocode}
+%^^A
+%   To record test informations on failure in order to display them
+%   all at once in the log at the end of the document:
+%^^A
+%    \begin{macrocode}
+\seq_new:N \g@@_seq
+%    \end{macrocode}
+%^^A
+%   To store assertion types and characteristics. Each \meta{key} is a type name.
+%   Each \meta{value} is a token list with 2 groups:
+%   a \meta{comparator} and a descriptive \meta{operator}.
+%^^A
+%    \begin{macrocode}
+\prop_new:N \g@@_type_prop
+%    \end{macrocode}
+%   To store arguments to be shared by hooks:
+%^^A
+%    \begin{macrocode}
+\prop_new:N \g@@_prop
+%    \end{macrocode}
+%^^A
+%   Placeholders to retrieve property values and more.
+%^^A
+%    \begin{macrocode}
+\tl_new:N \l@@_tmpa_tl
+\tl_new:N \l@@_tmpb_tl
+%    \end{macrocode}
+%^^A
+% Common hooks
+%    \begin{macrocode}
+  \NewHook {cmd/Assert/before failure}
+  \NewHook {cmd/Assert/after failure}
+%    \end{macrocode}
+%
+% \subsection{Add an assertion type}
+%    \begin{macrocode}
+\cs_generate_variant:Nn \cs_generate_variant:Nn { cx }
+\NewDocumentCommand\AssertAdd {mmm} {
+  \prop_put:Nnn \g@@_type_prop {#1} {
+    { \exp_not:n { #2 } }
+    { \exp_not:n { #3 } }
+  }
+  \NewHook {cmd/Assert/#1/before}
+  \NewHook {cmd/Assert/#1/failure}
+  \NewHook {cmd/Assert/#1/after}
+  \tl_map_inline:nn {novex} {
+    \tl_map_inline:nn {novex} {
+      \cs_generate_variant:cx { #2 } { ##1 ####1 }
+    }
+  }
+}
+%    \end{macrocode}
+%
+% \subsection{Sharing information}
+%
+%    \begin{macrocode}
+\prop_new:c { dict:assert/shared }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\cs_generate_variant:Nn \prop_if_in:NnTF { ce }
+\NewExpandableDocumentCommand \AssertIn { mmm } {
+  \prop_if_in:ceTF { dict:assert/shared } { #2 } { #3 }
+  \ignorespaces
+}
+%    \end{macrocode}
+%    \begin{macrocode}
+\tl_map_inline:nn { novex } {
+  \cs_generate_variant:Nn \prop_put:Nnn { cx#1 }
+}
+\NewDocumentCommand \AssertSet { mO{n}m } {
+  \cs:w prop_put:cx#2 \cs_end: { dict:assert/shared } { #1 } { #3 }
+  \ignorespaces
+}
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_generate_variant:Nn \prop_item:Nn { ce }
+\NewExpandableDocumentCommand \AssertGet { m } {
+  \prop_item:ce { dict:assert/shared } { #1 }
+  \ignorespaces
+}
+%    \end{macrocode}
+% 
+% \subsection{Assertion types}
+%
+% \subsubsection{Token lists}
+%    \begin{macrocode}
+\AssertAdd { TLEqual     } { tl_if_eq:nnF } { == }
+\AssertAdd { TLNotEqual  } { tl_if_eq:nnT } { != }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\AssertAdd { TLMatch } { regex_match:nnF } { ~ }
+\AssertAdd { TLNoMatch } { regex_match:nnT } { ~ }
+%    \end{macrocode}
+%
+% \subsubsection{Strings}
+%    \begin{macrocode}
+\cs_new:Npn \@@_str_if_eq:nnF #1#2#3 {
+  \exp_args:Nxx \str_if_eq:nnF {#1} {#2} { #3 }
+}
+\AssertAdd { StrEqual    } { @@_str_if_eq:nnF } { == }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\cs_new:Npn \@@_str_if_eq:nnT #1#2#3 {
+  \exp_args:Nxx \str_if_eq:nnT {#1} {#2} { #3 }
+}
+\AssertAdd { StrNotEqual } { @@_str_if_eq:nnT } { != }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\cs_new:Npn \@@_str_match:nnF #1#2#3 {
+  \exp_args:Nnx \regex_match:nnF {#1} {#2} { #3 }
+}
+\AssertAdd { StrMatch } { @@_str_match:nnF } { ~ }
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\cs_new:Npn \@@_str_match:nnT #1#2#3 {
+  \exp_args:Nnx \regex_match:nnT {#1} {#2} { #3 }
+}
+\AssertAdd { StrNoMatch } { @@_str_match:nnT } { ~ }
+%    \end{macrocode}
+%
+% \subsubsection{Integers}
+%    \begin{macrocode}
+\cs_new:Npn \@@_int_if_eq:nnF #1#2#3 {
+  \int_compare:nNnF {#1} = {#2} { #3 }
+}
+\AssertAdd { IntEqual } { @@_int_if_eq:nnF } { == }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_int_if_eq:nnT #1#2 #3 {
+  \int_compare:nNnT {#1} = {#2} { #3 }
+}
+\AssertAdd { IntNotEqual } { @@_int_if_eq:nnT } { != }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_int_if_lt:nnF #1#2#3 {
+  \int_compare:nNnF {#1} < {#2}  { #3 }
+}
+\AssertAdd { IntLess } { @@_int_if_lt:nnF } { < }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_int_if_lt:nnT #1#2#3 {
+  \int_compare:nNnT {#1} < {#2}  { #3 }
+}
+\AssertAdd { IntNotLess } { @@_int_if_lt:nnT } { >= }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_int_if_gt:nnF #1#2#3 {
+  \int_compare:nNnF {#1} > {#2}  { #3 }
+}
+\AssertAdd { IntGreater } { @@_int_if_gt:nnF } { > }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_int_if_gt:nnT #1#2#3 {
+  \int_compare:nNnT {#1} > {#2}  { #3 }
+}
+\AssertAdd { IntNotGreater } { @@_int_if_gt:nnT } { <= }
+%    \end{macrocode}
+% 
+% \subsubsection{Floats}
+%    \begin{macrocode}
+\cs_new:Npn \@@_fp_if_eq:nnF #1#2#3 {
+  \fp_compare:nNnF {#1} = {#2} { #3 }
+}
+\AssertAdd { FPEqual } { @@_fp_if_eq:nnF } { == }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_fp_if_eq:nnT #1#2 #3 {
+  \fp_compare:nNnT {#1} = {#2} { #3 }
+}
+\AssertAdd { FPNotEqual } { @@_fp_if_eq:nnT } { != }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_fp_if_lt:nnF #1#2#3 {
+  \fp_compare:nNnF {#1} < {#2}  { #3 }
+}
+\AssertAdd { FPLess } { @@_fp_if_lt:nnF } { < }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_fp_if_lt:nnT #1#2#3 {
+  \fp_compare:nNnT {#1} < {#2}  { #3 }
+}
+\AssertAdd { FPNotLess } { @@_fp_if_lt:nnT } { >= }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_fp_if_gt:nnF #1#2#3 {
+  \fp_compare:nNnF {#1} > {#2}  { #3 }
+}
+\AssertAdd { FPGreater } { @@_fp_if_gt:nnF } { > }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_fp_if_gt:nnT #1#2#3 {
+  \fp_compare:nNnT {#1} > {#2}  { #3 }
+}
+\AssertAdd { FPNotGreater } { @@_fp_if_gt:nnT } { <= }
+%    \end{macrocode}
+% 
+% \subsubsection{Almost}
+% Due to rounding errors, some weaker assertions are available on floating point variables.
+% Tuples are not supported.
+%    \begin{macrocode}
+\fp_gset:Nn \AssertPrecision { 10^-6 }
+\cs_new:Npn \AssertUsePrecision {
+  \fp_use:N \AssertPrecision
+}
+\cs_new:Npn \AssertSetPrecision #1 {
+  \fp_gset:Nn \AssertPrecision { #1 }
+  \ignorespaces
+}
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_almost_if_eq:nnF #1#2#3 {
+  \fp_compare:nNnF
+    {abs(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision }
+    { #3 }
+}
+\AssertAdd { AlmostEqual } { @@_almost_if_eq:nnF } { == }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_almost_if_eq:nnT #1#2 #3 {
+  \fp_compare:nNnT
+    {abs(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision }
+    { #3 }
+}
+\AssertAdd { AlmostNotEqual } { @@_almost_if_eq:nnT } { != }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_almost_if_lt:nnF #1#2#3 {
+  \fp_compare:nNnF {(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+}
+\AssertAdd { AlmostLess } { @@_almost_if_lt:nnF } { < }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_almost_if_lt:nnT #1#2#3 {
+  \fp_compare:nNnT {(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+}
+\AssertAdd { AlmostNotLess } { @@_almost_if_lt:nnT } { >= }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_almost_if_gt:nnF #1#2#3 {
+  \fp_compare:nNnF {(#2-#1)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+}
+\AssertAdd { AlmostGreater } { @@_almost_if_gt:nnF } { > }
+%    \end{macrocode}
+%    \begin{macrocode}
+\cs_new:Npn \@@_almost_if_gt:nnT #1#2#3 {
+  \fp_compare:nNnT {(#2-#1)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+}
+\AssertAdd { AlmostNotGreater } { @@_almost_if_gt:nnT } { <= }
+%    \end{macrocode}
+%
+% \subsection{\cs{Assert} command}
+%
+%   The assertions are straightforward wrappers over \LaTeX3 conditionals
+%   and private conditionals. This command is defined in two
+%   steps to allow for testing. The high level command may raise
+%   a fatal error whereas the lower won't.
+%
+%    \begin{macrocode}
+\NewDocumentCommand\Assert {mO{n}mO{n}m} {
+  \AssertCore {#1} {#2} {#3} {#4} {#5} {} {} { \msg_fatal:nn{Assert}{:n} }
+}
+%    \end{macrocode}
+%
+%   \begin{function}{\AssertCore}
+%     \begin{syntax}
+%       \cs{AssertCore} \marg{type}
+%       \ \ \marg{actual expansion} \marg{actual}
+%       \ \ \marg{expected expansion} \marg{expected}
+%       \ \ \marg{failure code} \marg{known type code} \marg{unknown type code:n}
+%     \end{syntax}
+%   \end{function}
+%    \begin{macrocode}
+\cs_generate_variant:Nn \prop_get:NnN { cxN }
+\cs_new:Npn \AssertCore #1#2#3#4#5#6#7#8 {
+%    \end{macrocode}
+% Branch according to \meta{type}: is it acceptable?
+%    \begin{macrocode}
+  \prop_if_in:NnTF \g@@_type_prop {#1} {
+%    \end{macrocode}
+% \meta{type} is acceptable, increment the number of tests performed
+% and localize next oparations in a group.
+%    \begin{macrocode}
+    \int_gincr:N \g@@_int
+    \group_begin:
+%    \end{macrocode}
+% Build the shared information
+%    \begin{macrocode}
+    \AssertSet {/type} {#1}
+    \AssertSet {/actual} [#2] {#3}
+    \AssertSet {/expected} [#4] {#5}
+%    \end{macrocode}
+% Build the operator
+%    \begin{macrocode}
+    \prop_get:NnN \g@@_type_prop {#1} \l@@_tmpa_tl
+    \AssertSet {/operator}
+      [x] { \exp_last_unbraced:NV \use_ii:nn \l@@_tmpa_tl }
+    \UseHook{cmd/Assert/#1/before}
+    \tl_set:Nx \l@@_tmpb_tl
+      { \exp_last_unbraced:NV \use_i:nn \l@@_tmpa_tl }
+    \tl_replace_once:Nnn \l@@_tmpb_tl { :nn } { :#2#4 }
+    \cs:w \l@@_tmpb_tl \cs_end:
+    {#3} {#5} {
+      \seq_gput_right:Nx \g@@_seq { \int_use:N \inputlineno }
+      \seq_gput_right:Nx \g@@_seq {
+        \str_if_eq:VnTF\CurrentFile {} {\c_sys_jobname_str}{\CurrentFile}
+      }
+      \prop_get:cxN { dict:assert/shared } { /actual } \l@@_tmpa_tl
+      \seq_gput_right:NV \g@@_seq \l@@_tmpa_tl
+      \prop_get:cxN { dict:assert/shared } { /operator } \l@@_tmpa_tl
+      \seq_gput_right:NV \g@@_seq \l@@_tmpa_tl
+      \prop_get:cxN { dict:assert/shared } { /expected } \l@@_tmpa_tl
+      \seq_gput_right:NV \g@@_seq \l@@_tmpa_tl
+      \UseHook{cmd/Assert/before failure}
+      \UseHook{cmd/Assert/#1/failure}
+      \UseHook{cmd/Assert/after failure}
+      #6
+    }
+    \UseHook{cmd/Assert/#1/after}
+    \group_end:
+%    \end{macrocode}
+% Finally execute \meta{known type code}
+%    \begin{macrocode}
+    #7
+  } {
+%    \end{macrocode}
+% \meta{type} is not acceptabl: finally execute \meta{unknown type code:n}
+% ^^A\AssertCore{UnknownType}{}{}{}{\use_i:nn{BAD}}
+%    \begin{macrocode}
+    #8 {Unknown~assertion~type:~#1}
+  }
+  \ignorespaces
+}
+%    \end{macrocode}
+%
+% \subsection{Summary of the tests}
+%
+%   Log information about the test performed.
+%   On failure, informations are displayed all at once
+%   and a fatal error is raised.
+%
+%   In order to test this package, a macro is used to raise
+%   this fatal error. This macro will be overriden while
+%   testing to neutralize the fatal error and continue.
+%
+%   \begin{function}{\@@_raise:n}
+%     \begin{syntax}
+%       \cs{@@_raise:n} \marg{msg}
+%     \end{syntax}
+%     When \meta{msg} is empty, a fatal error is raised,
+%       otherwise a note is printed.
+%   \end{function}
+%    \begin{macrocode}
+\cs_new:Npn \@@_raise:n #1 {
+  \tl_if_eq:nnTF {} {#1} {
+    \msg_note:nnx {Assert} {:n} {#1}
+  } {
+    \msg_fatal:nn{Assert}{:n}{Fatal error}
+  }
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\AtEndDocument{
+  \int_compare:nNnTF { \seq_count:N  \g@@_seq } > 0 {
+    \msg_note:nnx{Assert}{:n}{
+      \int_eval:n { \g@@_int - \seq_count:N \g@@_seq / 5 }
+      ~tests~passed~out~of~\int_use:N \g@@_int
+    }
+    \int_step_inline:nnnn 1 5 { \seq_count:N \g@@_seq } {
+      \msg_note:nnxxx {Assert} {failure:nnn} {
+        \seq_item:Nn \g@@_seq  {#1}
+      } {
+        \seq_item:Nn \g@@_seq { \int_eval:n{#1+1} }
+      } {
+        \seq_item:Nn \g@@_seq { \int_eval:n{#1+2} }~
+        \seq_item:Nn \g@@_seq { \int_eval:n{#1+3} }~
+        \seq_item:Nn \g@@_seq { \int_eval:n{#1+4} }
+      }
+    }
+    \@@_raise:n {}
+  } {
+    \group_begin:
+    \tl_set:Nn \l_tmpa_tl {All~\int_use:N \g@@_int~tests~passed}
+    \msg_note:nnx {Assert} {:n} {\l_tmpa_tl}
+    \cs_if_exist:NT \ASSERTSTR {\l_tmpa_tl}
+    \group_end:
+  }
+}
+%    \end{macrocode}
+%
+% \subsection{Messaging}
+%
+%   Replace the default 'Package' displayed in the log by 'Test'
+%
+%    \begin{macrocode}
+\prop_gput:Nnn \g_msg_module_type_prop {Assert} {Test}
+%    \end{macrocode}
+%
+%   All purposes message with one argument:
+%
+%    \begin{macrocode}
+\msg_new:nnn {Assert} {:n} {#1}
+%    \end{macrocode}
+%
+%   Failure message with three arguments:
+%
+%    \begin{macrocode}
+\msg_new:nnn {Assert} {failure:nnn} {
+  Failure~at~line~#1~of~file~#2:~#3
+}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+%</pkg>
+%    \end{macrocode}
+%
+% \end{implementation}
+%
+% \StopEventually{\setlength\IndexMin{200pt}  \PrintIndex }
+%
+% \Finale
+%

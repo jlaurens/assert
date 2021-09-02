@@ -1,0 +1,250 @@
+%%
+%% This is file `assert.sty',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% assert.dtx  (with options: `pkg')
+%% This is a generated file. Copyright (C) 2021 by Jérôme Laurens
+%% This file may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License, either
+%% version 1.3 of this license or (at your option) any later
+%% version.  The latest version of this license is in:
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.3 or later is part of all distributions of
+%% LaTeX version 2005/12/01 or later.
+\NeedsTeXFormat{LaTeX2e}[2020/01/01]
+\ProvidesExplPackage
+  {assert}
+  {2021/08/26}
+  {0.1}
+  {Lightweight assertion library for testing}
+\int_zero_new:N \g__assert_int
+\seq_new:N \g__assert_seq
+\prop_new:N \g__assert_type_prop
+\prop_new:N \g__assert_prop
+\tl_new:N \l__assert_tmpa_tl
+\tl_new:N \l__assert_tmpb_tl
+  \NewHook {cmd/Assert/before failure}
+  \NewHook {cmd/Assert/after failure}
+\cs_generate_variant:Nn \cs_generate_variant:Nn { cx }
+\NewDocumentCommand\AssertAdd {mmm} {
+  \prop_put:Nnn \g__assert_type_prop {#1} {
+    { \exp_not:n { #2 } }
+    { \exp_not:n { #3 } }
+  }
+  \NewHook {cmd/Assert/#1/before}
+  \NewHook {cmd/Assert/#1/failure}
+  \NewHook {cmd/Assert/#1/after}
+  \tl_map_inline:nn {novex} {
+    \tl_map_inline:nn {novex} {
+      \cs_generate_variant:cx { #2 } { ##1 ####1 }
+    }
+  }
+}
+\prop_new:c { dict:assert/shared }
+\cs_generate_variant:Nn \prop_if_in:NnTF { ce }
+\NewExpandableDocumentCommand \AssertIn { mmm } {
+  \prop_if_in:ceTF { dict:assert/shared } { #2 } { #3 }
+  \ignorespaces
+}
+\tl_map_inline:nn { novex } {
+  \cs_generate_variant:Nn \prop_put:Nnn { cx#1 }
+}
+\NewDocumentCommand \AssertSet { mO{n}m } {
+  \cs:w prop_put:cx#2 \cs_end: { dict:assert/shared } { #1 } { #3 }
+  \ignorespaces
+}
+\cs_generate_variant:Nn \prop_item:Nn { ce }
+\NewExpandableDocumentCommand \AssertGet { m } {
+  \prop_item:ce { dict:assert/shared } { #1 }
+  \ignorespaces
+}
+\AssertAdd { TLEqual     } { tl_if_eq:nnF } { == }
+\AssertAdd { TLNotEqual  } { tl_if_eq:nnT } { != }
+\AssertAdd { TLMatch } { regex_match:nnF } { ~ }
+\AssertAdd { TLNoMatch } { regex_match:nnT } { ~ }
+\cs_new:Npn \__assert_str_if_eq:nnF #1#2#3 {
+  \exp_args:Nxx \str_if_eq:nnF {#1} {#2} { #3 }
+}
+\AssertAdd { StrEqual    } { __assert_str_if_eq:nnF } { == }
+\cs_new:Npn \__assert_str_if_eq:nnT #1#2#3 {
+  \exp_args:Nxx \str_if_eq:nnT {#1} {#2} { #3 }
+}
+\AssertAdd { StrNotEqual } { __assert_str_if_eq:nnT } { != }
+\cs_new:Npn \__assert_str_match:nnF #1#2#3 {
+  \exp_args:Nnx \regex_match:nnF {#1} {#2} { #3 }
+}
+\AssertAdd { StrMatch } { __assert_str_match:nnF } { ~ }
+\cs_new:Npn \__assert_str_match:nnT #1#2#3 {
+  \exp_args:Nnx \regex_match:nnT {#1} {#2} { #3 }
+}
+\AssertAdd { StrNoMatch } { __assert_str_match:nnT } { ~ }
+\cs_new:Npn \__assert_int_if_eq:nnF #1#2#3 {
+  \int_compare:nNnF {#1} = {#2} { #3 }
+}
+\AssertAdd { IntEqual } { __assert_int_if_eq:nnF } { == }
+\cs_new:Npn \__assert_int_if_eq:nnT #1#2 #3 {
+  \int_compare:nNnT {#1} = {#2} { #3 }
+}
+\AssertAdd { IntNotEqual } { __assert_int_if_eq:nnT } { != }
+\cs_new:Npn \__assert_int_if_lt:nnF #1#2#3 {
+  \int_compare:nNnF {#1} < {#2}  { #3 }
+}
+\AssertAdd { IntLess } { __assert_int_if_lt:nnF } { < }
+\cs_new:Npn \__assert_int_if_lt:nnT #1#2#3 {
+  \int_compare:nNnT {#1} < {#2}  { #3 }
+}
+\AssertAdd { IntNotLess } { __assert_int_if_lt:nnT } { >= }
+\cs_new:Npn \__assert_int_if_gt:nnF #1#2#3 {
+  \int_compare:nNnF {#1} > {#2}  { #3 }
+}
+\AssertAdd { IntGreater } { __assert_int_if_gt:nnF } { > }
+\cs_new:Npn \__assert_int_if_gt:nnT #1#2#3 {
+  \int_compare:nNnT {#1} > {#2}  { #3 }
+}
+\AssertAdd { IntNotGreater } { __assert_int_if_gt:nnT } { <= }
+\cs_new:Npn \__assert_fp_if_eq:nnF #1#2#3 {
+  \fp_compare:nNnF {#1} = {#2} { #3 }
+}
+\AssertAdd { FPEqual } { __assert_fp_if_eq:nnF } { == }
+\cs_new:Npn \__assert_fp_if_eq:nnT #1#2 #3 {
+  \fp_compare:nNnT {#1} = {#2} { #3 }
+}
+\AssertAdd { FPNotEqual } { __assert_fp_if_eq:nnT } { != }
+\cs_new:Npn \__assert_fp_if_lt:nnF #1#2#3 {
+  \fp_compare:nNnF {#1} < {#2}  { #3 }
+}
+\AssertAdd { FPLess } { __assert_fp_if_lt:nnF } { < }
+\cs_new:Npn \__assert_fp_if_lt:nnT #1#2#3 {
+  \fp_compare:nNnT {#1} < {#2}  { #3 }
+}
+\AssertAdd { FPNotLess } { __assert_fp_if_lt:nnT } { >= }
+\cs_new:Npn \__assert_fp_if_gt:nnF #1#2#3 {
+  \fp_compare:nNnF {#1} > {#2}  { #3 }
+}
+\AssertAdd { FPGreater } { __assert_fp_if_gt:nnF } { > }
+\cs_new:Npn \__assert_fp_if_gt:nnT #1#2#3 {
+  \fp_compare:nNnT {#1} > {#2}  { #3 }
+}
+\AssertAdd { FPNotGreater } { __assert_fp_if_gt:nnT } { <= }
+\fp_gset:Nn \AssertPrecision { 10^-6 }
+\cs_new:Npn \AssertUsePrecision {
+  \fp_use:N \AssertPrecision
+}
+\cs_new:Npn \AssertSetPrecision #1 {
+  \fp_gset:Nn \AssertPrecision { #1 }
+  \ignorespaces
+}
+\cs_new:Npn \__assert_almost_if_eq:nnF #1#2#3 {
+  \fp_compare:nNnF
+    {abs(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision }
+    { #3 }
+}
+\AssertAdd { AlmostEqual } { __assert_almost_if_eq:nnF } { == }
+\cs_new:Npn \__assert_almost_if_eq:nnT #1#2 #3 {
+  \fp_compare:nNnT
+    {abs(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision }
+    { #3 }
+}
+\AssertAdd { AlmostNotEqual } { __assert_almost_if_eq:nnT } { != }
+\cs_new:Npn \__assert_almost_if_lt:nnF #1#2#3 {
+  \fp_compare:nNnF {(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+}
+\AssertAdd { AlmostLess } { __assert_almost_if_lt:nnF } { < }
+\cs_new:Npn \__assert_almost_if_lt:nnT #1#2#3 {
+  \fp_compare:nNnT {(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+}
+\AssertAdd { AlmostNotLess } { __assert_almost_if_lt:nnT } { >= }
+\cs_new:Npn \__assert_almost_if_gt:nnF #1#2#3 {
+  \fp_compare:nNnF {(#2-#1)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+}
+\AssertAdd { AlmostGreater } { __assert_almost_if_gt:nnF } { > }
+\cs_new:Npn \__assert_almost_if_gt:nnT #1#2#3 {
+  \fp_compare:nNnT {(#2-#1)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+}
+\AssertAdd { AlmostNotGreater } { __assert_almost_if_gt:nnT } { <= }
+\NewDocumentCommand\Assert {mO{n}mO{n}m} {
+  \AssertCore {#1} {#2} {#3} {#4} {#5} {} {} { \msg_fatal:nn{Assert}{:n} }
+}
+\cs_generate_variant:Nn \prop_get:NnN { cxN }
+\cs_new:Npn \AssertCore #1#2#3#4#5#6#7#8 {
+  \prop_if_in:NnTF \g__assert_type_prop {#1} {
+    \int_gincr:N \g__assert_int
+    \group_begin:
+    \AssertSet {/type} {#1}
+    \AssertSet {/actual} [#2] {#3}
+    \AssertSet {/expected} [#4] {#5}
+    \prop_get:NnN \g__assert_type_prop {#1} \l__assert_tmpa_tl
+    \AssertSet {/operator}
+      [x] { \exp_last_unbraced:NV \use_ii:nn \l__assert_tmpa_tl }
+    \UseHook{cmd/Assert/#1/before}
+    \tl_set:Nx \l__assert_tmpb_tl
+      { \exp_last_unbraced:NV \use_i:nn \l__assert_tmpa_tl }
+    \tl_replace_once:Nnn \l__assert_tmpb_tl { :nn } { :#2#4 }
+    \cs:w \l__assert_tmpb_tl \cs_end:
+    {#3} {#5} {
+      \seq_gput_right:Nx \g__assert_seq { \int_use:N \inputlineno }
+      \seq_gput_right:Nx \g__assert_seq {
+        \str_if_eq:VnTF\CurrentFile {} {\c_sys_jobname_str}{\CurrentFile}
+      }
+      \prop_get:cxN { dict:assert/shared } { /actual } \l__assert_tmpa_tl
+      \seq_gput_right:NV \g__assert_seq \l__assert_tmpa_tl
+      \prop_get:cxN { dict:assert/shared } { /operator } \l__assert_tmpa_tl
+      \seq_gput_right:NV \g__assert_seq \l__assert_tmpa_tl
+      \prop_get:cxN { dict:assert/shared } { /expected } \l__assert_tmpa_tl
+      \seq_gput_right:NV \g__assert_seq \l__assert_tmpa_tl
+      \UseHook{cmd/Assert/before failure}
+      \UseHook{cmd/Assert/#1/failure}
+      \UseHook{cmd/Assert/after failure}
+      #6
+    }
+    \UseHook{cmd/Assert/#1/after}
+    \group_end:
+    #7
+  } {
+    #8 {Unknown~assertion~type:~#1}
+  }
+  \ignorespaces
+}
+\cs_new:Npn \__assert_raise:n #1 {
+  \tl_if_eq:nnTF {} {#1} {
+    \msg_note:nnx {Assert} {:n} {#1}
+  } {
+    \msg_fatal:nn{Assert}{:n}{Fatal error}
+  }
+}
+\AtEndDocument{
+  \int_compare:nNnTF { \seq_count:N  \g__assert_seq } > 0 {
+    \msg_note:nnx{Assert}{:n}{
+      \int_eval:n { \g__assert_int - \seq_count:N \g__assert_seq / 5 }
+      ~tests~passed~out~of~\int_use:N \g__assert_int
+    }
+    \int_step_inline:nnnn 1 5 { \seq_count:N \g__assert_seq } {
+      \msg_note:nnxxx {Assert} {failure:nnn} {
+        \seq_item:Nn \g__assert_seq  {#1}
+      } {
+        \seq_item:Nn \g__assert_seq { \int_eval:n{#1+1} }
+      } {
+        \seq_item:Nn \g__assert_seq { \int_eval:n{#1+2} }~
+        \seq_item:Nn \g__assert_seq { \int_eval:n{#1+3} }~
+        \seq_item:Nn \g__assert_seq { \int_eval:n{#1+4} }
+      }
+    }
+    \__assert_raise:n {}
+  } {
+    \group_begin:
+    \tl_set:Nn \l_tmpa_tl {All~\int_use:N \g__assert_int~tests~passed}
+    \msg_note:nnx {Assert} {:n} {\l_tmpa_tl}
+    \cs_if_exist:NT \ASSERTSTR {\l_tmpa_tl}
+    \group_end:
+  }
+}
+\prop_gput:Nnn \g_msg_module_type_prop {Assert} {Test}
+\msg_new:nnn {Assert} {:n} {#1}
+\msg_new:nnn {Assert} {failure:nnn} {
+  Failure~at~line~#1~of~file~#2:~#3
+}
+\endinput
+%%
+%% End of file `assert.sty'.
