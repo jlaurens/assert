@@ -16,7 +16,7 @@
 \NeedsTeXFormat{LaTeX2e}[2020/01/01]
 \ProvidesExplPackage
   {assert}
-  {2021/08/26}
+  {2021/09/02}
   {0.1}
   {Lightweight assertion library for testing}
 \int_zero_new:N \g__assert_int
@@ -81,27 +81,27 @@
 }
 \AssertAdd { StrNoMatch } { __assert_str_match:nnT } { ~ }
 \cs_new:Npn \__assert_int_if_eq:nnF #1#2#3 {
-  \int_compare:nNnF {#1} = {#2} { #3 }
+  \int_compare:nNnF {\fp_eval:n {floor(#1)}} = {\fp_eval:n {floor(#2)}} { #3 }
 }
 \AssertAdd { IntEqual } { __assert_int_if_eq:nnF } { == }
 \cs_new:Npn \__assert_int_if_eq:nnT #1#2 #3 {
-  \int_compare:nNnT {#1} = {#2} { #3 }
+  \int_compare:nNnT {\fp_eval:n {floor(#1)}} = {\fp_eval:n {floor(#2)}} { #3 }
 }
 \AssertAdd { IntNotEqual } { __assert_int_if_eq:nnT } { != }
 \cs_new:Npn \__assert_int_if_lt:nnF #1#2#3 {
-  \int_compare:nNnF {#1} < {#2}  { #3 }
+  \int_compare:nNnF {\fp_eval:n {floor(#1)}} < {\fp_eval:n {floor(#2)}}  { #3 }
 }
 \AssertAdd { IntLess } { __assert_int_if_lt:nnF } { < }
 \cs_new:Npn \__assert_int_if_lt:nnT #1#2#3 {
-  \int_compare:nNnT {#1} < {#2}  { #3 }
+  \int_compare:nNnT {\fp_eval:n {floor(#1)}} < {\fp_eval:n {floor(#2)}}  { #3 }
 }
 \AssertAdd { IntNotLess } { __assert_int_if_lt:nnT } { >= }
 \cs_new:Npn \__assert_int_if_gt:nnF #1#2#3 {
-  \int_compare:nNnF {#1} > {#2}  { #3 }
+  \int_compare:nNnF {\fp_eval:n {floor(#1)}} > {\fp_eval:n {floor(#2)}}  { #3 }
 }
 \AssertAdd { IntGreater } { __assert_int_if_gt:nnF } { > }
 \cs_new:Npn \__assert_int_if_gt:nnT #1#2#3 {
-  \int_compare:nNnT {#1} > {#2}  { #3 }
+  \int_compare:nNnT {\fp_eval:n {floor(#1)}} > {\fp_eval:n {floor(#2)}}  { #3 }
 }
 \AssertAdd { IntNotGreater } { __assert_int_if_gt:nnT } { <= }
 \cs_new:Npn \__assert_fp_if_eq:nnF #1#2#3 {
@@ -137,31 +137,31 @@
   \ignorespaces
 }
 \cs_new:Npn \__assert_almost_if_eq:nnF #1#2#3 {
-  \fp_compare:nNnF
-    {abs(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision }
+  \fp_compare:nNnT
+    {abs(#1-#2)/(1+abs(#1)+abs(#2))} > { \AssertPrecision }
     { #3 }
 }
 \AssertAdd { AlmostEqual } { __assert_almost_if_eq:nnF } { == }
 \cs_new:Npn \__assert_almost_if_eq:nnT #1#2 #3 {
-  \fp_compare:nNnT
-    {abs(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision }
+  \fp_compare:nNnF
+    {abs(#1-#2)/(1+abs(#1)+abs(#2))} > { \AssertPrecision }
     { #3 }
 }
 \AssertAdd { AlmostNotEqual } { __assert_almost_if_eq:nnT } { != }
 \cs_new:Npn \__assert_almost_if_lt:nnF #1#2#3 {
-  \fp_compare:nNnF {(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+  \fp_compare:nNnT {(#1-#2)/(1+abs(#1)+abs(#2))} > { \AssertPrecision } { #3 }
 }
 \AssertAdd { AlmostLess } { __assert_almost_if_lt:nnF } { < }
 \cs_new:Npn \__assert_almost_if_lt:nnT #1#2#3 {
-  \fp_compare:nNnT {(#1-#2)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+  \fp_compare:nNnF {(#1-#2)/(1+abs(#1)+abs(#2))} > { \AssertPrecision } { #3 }
 }
 \AssertAdd { AlmostNotLess } { __assert_almost_if_lt:nnT } { >= }
 \cs_new:Npn \__assert_almost_if_gt:nnF #1#2#3 {
-  \fp_compare:nNnF {(#2-#1)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+  \fp_compare:nNnT {(#2-#1)/(1+abs(#1)+abs(#2))} > { \AssertPrecision } { #3 }
 }
 \AssertAdd { AlmostGreater } { __assert_almost_if_gt:nnF } { > }
 \cs_new:Npn \__assert_almost_if_gt:nnT #1#2#3 {
-  \fp_compare:nNnT {(#2-#1)/(1+abs(#1)+abs(#2))} < { \AssertPrecision } { #3 }
+  \fp_compare:nNnF {(#2-#1)/(1+abs(#1)+abs(#2))} > { \AssertPrecision } { #3 }
 }
 \AssertAdd { AlmostNotGreater } { __assert_almost_if_gt:nnT } { <= }
 \NewDocumentCommand\Assert {mO{n}mO{n}m} {
@@ -217,8 +217,8 @@
 \AtEndDocument{
   \int_compare:nNnTF { \seq_count:N  \g__assert_seq } > 0 {
     \msg_note:nnx{Assert}{:n}{
-      \int_eval:n { \g__assert_int - \seq_count:N \g__assert_seq / 5 }
-      ~tests~passed~out~of~\int_use:N \g__assert_int
+      \int_eval:n { \g__assert_int - \seq_count:N \g__assert_seq / 5 }~
+        tests~passed~out~of~\int_use:N \g__assert_int
     }
     \int_step_inline:nnnn 1 5 { \seq_count:N \g__assert_seq } {
       \msg_note:nnxxx {Assert} {failure:nnn} {
@@ -234,7 +234,7 @@
     \__assert_raise:n {}
   } {
     \group_begin:
-    \tl_set:Nn \l_tmpa_tl {All~\int_use:N \g__assert_int~tests~passed}
+    \tl_set:Nn \l_tmpa_tl {All~\int_use:N \g__assert_int\space tests~passed}
     \msg_note:nnx {Assert} {:n} {\l_tmpa_tl}
     \cs_if_exist:NT \ASSERTSTR {\l_tmpa_tl}
     \group_end:

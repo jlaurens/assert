@@ -190,6 +190,9 @@
 \myAssertCore {FPNotGreater} {n} {3} {n} {2} {\YES} {\NO}
 \myAssertCore {FPGreater} {n} {1} {n} {1} {\YES} {\NO}
 \myAssertCore {FPNotGreater} {n} {1} {n} {1} {\NO} {\NO}
+\myAssertCore {FPEqual} {n} {1} {n} { floor(1)} {\NO} {\NO}
+\myAssertCore {FPNotEqual} {n} {1.1} {n} { floor(1.1)} {\NO} {\NO}
+\myAssertCore {FPEqual} {n} {1.1} {n} { floor(1.1)} {\YES} {\NO}
 
 \section{Almost}
 \myAssertCore {AlmostEqual} {n} {1} {n} {1.000001} {\NO} {\NO}
@@ -209,5 +212,46 @@
 \AssertSetPrecision{0.01}
 \myAssertCore {FPEqual} {n} {0.01} {n} {\AssertPrecision} {\NO} {\NO}
 \myAssertCore {AlmostEqual} {n} {1} {n} {1.01} {\NO} {\NO}
+
+\section {Hooks}
+\ExplSyntaxOn
+\tl_new:N \g_my_tl
+\AddToHook {cmd/Assert/before} {
+  \tl_gput_right:Nn \g_my_tl { 1 }
+}
+\AddToHook {cmd/Assert/IntEqual/before} {
+  \tl_gput_right:Nn \g_my_tl { 2 }
+}
+\AddToHook {cmd/Assert/before failure} {
+  \tl_gput_right:Nn \g_my_tl { 3 }
+}
+\AddToHook {cmd/Assert/IntEqual/failure} {
+  \tl_gput_right:Nn \g_my_tl { 4 }
+}
+\AddToHook {cmd/Assert/after failure} {
+  \tl_gput_right:Nn \g_my_tl { 5 }
+}
+\AddToHook {cmd/Assert/IntEqual/after} {
+  \tl_gput_right:Nn \g_my_tl { 6 }
+}
+\AddToHook {cmd/Assert/after} {
+  \tl_gput_right:Nn \g_my_tl { 7 }
+}
+\Assert {IntEqual} {1} {1}
+\myAssertCore {TLEqual} {o} {\g_my_tl} {n} {1267}  {\NO} {\NO}
+\tl_gclear:N \g_my_tl
+\Assert {IntEqual} {1} {2}
+\myAssertCore {TLEqual} {o} {\g_my_tl} {n} {1234567}  {\NO} {\NO}
+\ExplSyntaxOff
+
+\section {Minimal example failures}
+\myAssertCore {IntNotEqual} {n} {\ONE+1} {n} {2}  {\YES} {\NO}
+\myAssertCore {IntEqual} {n} {\ONE+1} {n} {3}  {\YES} {\NO}
+\myAssertCore {StrEqual} {n} {\ONE+1} {n} {1 +1}  {\YES} {\NO}
+
+\ExplSyntaxOn
+\int_eval:n {\fp_eval:n{floor(2.1)}}
+\ExplSyntaxOff
+
 Done.
 \end{document}
